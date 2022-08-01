@@ -143,15 +143,15 @@ sudo service nginx status
 
 `sudo nano /etc/php/7.4/fpm/php.ini`
 
-        ```
-        opcache.enable=1
-        opcache.enable_cli=1
-        opcache.memory_consumption=128
-        opcache.interned_strings_buffer=8
-        opcache.max_accelerated_files=10000
-        opcache.revalidate_freq=60
-        opcache.fast_shutdown=1
-        ```
+```
+opcache.enable=1
+opcache.enable_cli=1
+opcache.memory_consumption=128
+opcache.interned_strings_buffer=8
+opcache.max_accelerated_files=10000
+opcache.revalidate_freq=60
+opcache.fast_shutdown=1
+```
 
 Exit nano.
 
