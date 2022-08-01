@@ -113,6 +113,11 @@ git clone https://github.com/Taco-Cabana-IT-Services/wordpress-nginx-tc.git
 mv ./nginx ./nginx-backup
 mv ./wordpress-nginx-tc ./nginx
 cd /etc/nginx
+```
+
+Symlink sites-available to sites-enabled.
+
+```
 sudo ln -s /etc/nginx/sites-available/tacocabana.com /etc/nginx/sites-enabled/tacocabana.com
 ```
 
