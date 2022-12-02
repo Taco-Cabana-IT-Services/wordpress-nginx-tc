@@ -31,7 +31,7 @@ sudo ufw status verbose
 
 ```
 sudo apt-mark hold mysql*
-sudo apt-mark hold php7.4*
+sudo apt-mark hold php8.1*
 ```
 
 ```
@@ -45,7 +45,7 @@ nginx -v
 
 ```
 sudo apt-mark unhold mysql*
-sudo apt-mark unhold php7.4*
+sudo apt-mark unhold php8.1*
 ```
 
 ```
@@ -57,27 +57,27 @@ sudo service nginx status
 sudo service nginx stop
 ```
 
-# Install php7.4-fpm
+# Install php8.1-fpm
 
 ```
-sudo apt install php7.4-fpm php7.4-common php7.4-mysql \
-php7.4-xml php7.4-xmlrpc php7.4-curl php7.4-gd \
-php7.4-imagick php7.4-cli php7.4-dev php7.4-imap \
-php7.4-mbstring php7.4-opcache php7.4-redis \
-php7.4-soap php7.4-zip -y
-php-fpm7.4 -v
+sudo apt install php8.1-fpm php8.1-common php8.1-mysql \
+php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd \
+php8.1-imagick php8.1-cli php8.1-dev php8.1-imap \
+php8.1-mbstring php8.1-opcache php8.1-redis \
+php8.1-soap php8.1-zip -y
+php-fpm8.1 -v
 ```
 
 # Edit php.ini
 
-`sudo nano /etc/php/7.4/fpm/php.ini`
+`sudo nano /etc/php/8.1/fpm/php.ini`
 
 ```
 memory_limit = 512M
 upload_max_filesize = 64M
 post_max_size = 64M
-max_input_time = 300
-max_execution_time = 300
+max_input_time = 120
+max_execution_time = 120
 ```
 
 Exit nano.
@@ -127,7 +127,7 @@ sudo systemctl stop apache2
 ```
 
 ```
-sudo service php7.4-fpm restart
+sudo service php8.1-fpm restart
 sudo service nginx start
 sudo nginx -t
 sudo service nginx restart
@@ -141,7 +141,7 @@ sudo service nginx status
 
 # Setup opcache for php
 
-`sudo nano /etc/php/7.4/fpm/php.ini`
+`sudo nano /etc/php/8.1/fpm/php.ini`
 
 ```
 opcache.enable=1
@@ -156,7 +156,7 @@ opcache.fast_shutdown=1
 Exit nano.
 
 ```
-sudo service php7.4-fpm restart
+sudo service php8.1-fpm restart
 ```
 
 # Setup redis for site
@@ -270,10 +270,10 @@ sudo systemctl status apache2
 ```
 
 ```
-sudo a2dismod php7.4
+sudo a2dismod php8.1
 sudo a2dismod mpm_prefork
 sudo a2enmod mpm_event proxy_fcgi setenvif
-sudo a2enconf php7.4-fpm
+sudo a2enconf php8.1-fpm
 ```
 
 ## References
