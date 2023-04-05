@@ -31,7 +31,7 @@ sudo ufw status verbose
 
 ```
 sudo apt-mark hold mysql*
-sudo apt-mark hold php8.1*
+sudo apt-mark hold php7.4*
 ```
 
 ```
@@ -45,7 +45,7 @@ nginx -v
 
 ```
 sudo apt-mark unhold mysql*
-sudo apt-mark unhold php8.1*
+sudo apt-mark unhold php7.4*
 ```
 
 ```
@@ -57,20 +57,20 @@ sudo service nginx status
 sudo service nginx stop
 ```
 
-# Install php8.1-fpm
+# Install php7.4-fpm
 
 ```
-sudo apt install php8.1-fpm php8.1-common php8.1-mysql \
-php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd \
-php8.1-imagick php8.1-cli php8.1-dev php8.1-imap \
-php8.1-mbstring php8.1-opcache php8.1-redis \
-php8.1-soap php8.1-zip -y
-php-fpm8.1 -v
+sudo apt install php7.4-fpm php7.4-common php7.4-mysql \
+php7.4-xml php7.4-xmlrpc php7.4-curl php7.4-gd \
+php7.4-imagick php7.4-cli php7.4-dev php7.4-imap \
+php7.4-mbstring php7.4-opcache php7.4-redis \
+php7.4-soap php7.4-zip -y
+php-fpm7.4 -v
 ```
 
 # Edit php.ini
 
-`sudo nano /etc/php/8.1/fpm/php.ini`
+`sudo nano /etc/php/7.4/fpm/php.ini`
 
 ```
 memory_limit = 512M
@@ -127,7 +127,7 @@ sudo systemctl stop apache2
 ```
 
 ```
-sudo service php8.1-fpm restart
+sudo service php7.4-fpm restart
 sudo service nginx start
 sudo nginx -t
 sudo service nginx restart
@@ -136,12 +136,12 @@ sudo service nginx status
 
 ### TODOs
 
--   Check if website is up
--   NGINX Cache by Till Krüss, then configure settings
+- Check if website is up
+- NGINX Cache by Till Krüss, then configure settings
 
 # Setup opcache for php
 
-`sudo nano /etc/php/8.1/fpm/php.ini`
+`sudo nano /etc/php/7.4/fpm/php.ini`
 
 ```
 opcache.enable=1
@@ -156,7 +156,7 @@ opcache.fast_shutdown=1
 Exit nano.
 
 ```
-sudo service php8.1-fpm restart
+sudo service php7.4-fpm restart
 ```
 
 # Setup redis for site
@@ -193,8 +193,8 @@ DzsBOHA6HrDE9X7TkDW0TG8VJBJcnlhiuctdlNPLy4XsqTZ3wuj4ZcJRhVUwZuiR6GpRfW3SVGauLFVk
 
 `sudo nano /etc/redis/redis.conf`
 
--   Uncomment `requirepass` and paste value to right of key
--   Exit nano.
+- Uncomment `requirepass` and paste value to right of key
+- Exit nano.
 
 ```
 redis-cli -a DzsBOHA6HrDE9X7TkDW0TG8VJBJcnlhiuctdlNPLy4XsqTZ3wuj4ZcJRhVUwZuiR6GpRfW3SVGauLFVk
@@ -204,13 +204,13 @@ config set maxmemory 128M
 
 ### TODOs
 
--   Redis Object Cache by Till Krüss, then configure settings
+- Redis Object Cache by Till Krüss, then configure settings
 
 # Setup fail2ban
 
 ### TODOs
 
--   WP fail2ban by Charles Lecklider, then configure settings
+- WP fail2ban by Charles Lecklider, then configure settings
 
 ```
 sudo apt install fail2ban
@@ -270,13 +270,13 @@ sudo systemctl status apache2
 ```
 
 ```
-sudo a2dismod php8.1
+sudo a2dismod php7.4
 sudo a2dismod mpm_prefork
 sudo a2enmod mpm_event proxy_fcgi setenvif
-sudo a2enconf php8.1-fpm
+sudo a2enconf php7.4-fpm
 ```
 
 ## References
 
--   https://spinupwp.com/hosting-wordpress-yourself-nginx-php-mysql/
--   https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-20-04
+- https://spinupwp.com/hosting-wordpress-yourself-nginx-php-mysql/
+- https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-20-04
