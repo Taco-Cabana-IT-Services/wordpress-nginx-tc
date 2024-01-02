@@ -1,13 +1,3 @@
-# WordPress Nginx
-
-This config kit contains the Nginx configurations used in the [Install WordPress on Ubuntu 20.04](https://spinupwp.com/hosting-wordpress-yourself-ssl-spdy/) guide. It contains best practices from various sources, including the [WordPress Codex](https://codex.wordpress.org/Nginx) and [H5BP](https://github.com/h5bp/server-configs-nginx). The following example sites are included:
-
-* [multisite-subdirectory.com](sites-available/multisite-subdirectory.com) - WordPress multisite install using subdirectories
-* [multisite-subdomain.com](sites-available/multisite-subdomain.com) - WordPress multisite install using subdomains
-* [single-site.com](sites-available/single-site.com) - WordPress single site install
-* [single-site-with-caching.com](sites-available/single-site-with-caching.com) - WordPress single site install with FastCGI caching
-* [single-site-no-ssl.com](sites-available/single-site-no-ssl.com) - WordPress single site install (no SSL or page caching)
-
 ## Usage
 
 ### Site configuration
@@ -60,7 +50,6 @@ fastcgi_pass    php73
 
 This effectively allows you to have different server blocks execute different versions of PHP if needed.
 
-
 ## Directory Structure
 
 This config kit has the following structure, which is based on the conventions used by a default Nginx install on Debian:
@@ -74,15 +63,15 @@ This config kit has the following structure, which is based on the conventions u
 ├── sites-enabled
 ```
 
-__conf.d__ - configurations for additional modules.
+**conf.d** - configurations for additional modules.
 
-__global__ - configurations within the `http` block.
+**global** - configurations within the `http` block.
 
-__global/server__ - configurations within the `server` block. The `defaults.conf` file should be included on the majority of sites, which contains sensible defaults for caching, file exclusions and security. Additional `.conf` files can be included as needed on a per-site basis.
+**global/server** - configurations within the `server` block. The `defaults.conf` file should be included on the majority of sites, which contains sensible defaults for caching, file exclusions and security. Additional `.conf` files can be included as needed on a per-site basis.
 
-__sites-available__ - configurations for individual sites (virtual hosts).
+**sites-available** - configurations for individual sites (virtual hosts).
 
-__sites-enabled__ - symlinks to configurations within the `sites-available` directory. Only sites which have been symlinked are loaded.
+**sites-enabled** - symlinks to configurations within the `sites-available` directory. Only sites which have been symlinked are loaded.
 
 ### Recommended Site Structure
 
