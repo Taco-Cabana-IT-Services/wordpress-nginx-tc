@@ -34,7 +34,7 @@ If the configuration passes, restart Nginx:
 
 ### PHP configuration
 
-The php-fpm pool configuration is located in `global/php-pool.conf` and defaults to PHP 7.4. It will need modifying if you want the default php-fpm pool service to be a different PHP version. Additional PHP version upstream definitions can be added to the `/upstreams` folder (a PHP 7.3 sample is provided there). You can either use the default pool using `$upstream` in your nginx configurations or the specific upstream definition (i.e. php73, php72) setup by your custom upstream definitions.
+The php-fpm pool configuration is located in `global/php-pool.conf` and defaults to PHP 7.4. It will need modifying if you want the default php-fpm pool service to be a different PHP version. Additional PHP version upstream definitions can be added to the `/upstreams` folder (a PHP 8.3 sample is provided there). You can either use the default pool using `$upstream` in your nginx configurations or the specific upstream definition (i.e. php83, php82) setup by your custom upstream definitions.
 
 For example, currently the nginx configuration for `single-site.com` has the following set for php requests:
 
@@ -42,10 +42,10 @@ For example, currently the nginx configuration for `single-site.com` has the fol
 fastcgi_pass    $upstream
 ```
 
-You could change that to the following to use the php 7.3 PHP service instead (assuming that php7.3-fpm service is running).
+You could change that to the following to use the php 8.3 PHP service instead (assuming that php8.3-fpm service is running).
 
 ```
-fastcgi_pass    php73
+fastcgi_pass    php83
 ```
 
 This effectively allows you to have different server blocks execute different versions of PHP if needed.
