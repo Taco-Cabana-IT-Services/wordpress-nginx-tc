@@ -31,7 +31,7 @@ sudo ufw status verbose
 
 ```
 sudo apt-mark hold mysql*
-sudo apt-mark hold phpXXX*
+sudo apt-mark hold php8.1*
 ```
 
 ```
@@ -45,7 +45,7 @@ nginx -v
 
 ```
 sudo apt-mark unhold mysql*
-sudo apt-mark unhold phpXXX*
+sudo apt-mark unhold php8.1*
 ```
 
 ```
@@ -57,23 +57,23 @@ sudo service nginx status
 sudo service nginx stop
 ```
 
-# Install phpXXX-fpm
+# Install php8.1-fpm
 
 ```
-sudo apt install phpXXX-fpm phpXXX-common phpXXX-mysql \
-phpXXX-xml phpXXX-xmlrpc phpXXX-curl phpXXX-gd \
-phpXXX-imagick phpXXX-cli phpXXX-dev phpXXX-imap \
-phpXXX-mbstring phpXXX-opcache phpXXX-redis \
-phpXXX-soap phpXXX-zip -y
-php-fpmXXX -v
+sudo apt install php8.1-fpm php8.1-common php8.1-mysql \
+php8.1-xml php8.1-xmlrpc php8.1-curl php8.1-gd \
+php8.1-imagick php8.1-cli php8.1-dev php8.1-imap \
+php8.1-mbstring php8.1-opcache php8.1-redis \
+php8.1-soap php8.1-zip -y
+php-fpm8.1 -v
 ```
 
 # Edit php.ini
 
-`sudo nano /etc/php/XXX/fpm/php.ini`
+`sudo nano /etc/php/8.1/fpm/php.ini`
 
 ```
-memory_limit = 256M
+memory_limit = 128M
 post_max_size = 64M
 max_input_time = 120
 max_execution_time = 120
@@ -143,7 +143,7 @@ sudo systemctl stop apache2
 ```
 
 ```
-sudo service phpXXX-fpm restart
+sudo service php8.1-fpm restart
 sudo service nginx start
 sudo nginx -t
 sudo service nginx restart
@@ -152,7 +152,7 @@ sudo service nginx status
 
 # Setup opcache for php
 
-`sudo nano /etc/php/XXX/fpm/php.ini` and/or `/etc/php/XXX/fpm/conf.d/10-opcache.ini`
+`sudo nano /etc/php/8.1/fpm/php.ini` and/or `/etc/php/8.1/fpm/conf.d/10-opcache.ini`
 
 ```
 ; configuration for php opcache module
@@ -163,19 +163,24 @@ zend_extension=opcache.so
 opcache.enable=1
 
 ; The size of the shared memory storage used by OPcache, in megabytes.
-opcache.memory_consumption=256
+opcache.memory_consumption=128
 
 ; The amount of memory for interned strings in Mbytes.
-opcache.interned_strings_buffer=32
+opcache.interned_strings_buffer=16
 
 ; The maximum number of keys (and therefore scripts) in the OPcache hash table.
-opcache.max_accelerated_files=32531
+opcache.max_accelerated_files=16001
 
+; Disables OPcache for the CLI, as it's not needed for short-lived scripts.
 opcache.enable_cli=0
+; When enabled, OPcache appends the current working directory to the script key.
 opcache.use_cwd=1
+; Allows OPcache to skip the file existence check for includes/requires.
 opcache.enable_file_override=1
 
+; Validates file permissions before caching or serving from cache.
 opcache.validate_permission=1
+; Checks for conflicting filenames in the include_path.
 opcache.revalidate_path=1
 ; How often (in seconds) to check script timestamps for updates.
 opcache.revalidate_freq=30
@@ -191,59 +196,60 @@ opcache.save_comments=1
 ; Enables Tracing JIT. This is the key setting.
 ;opcache.jit=1255
 
+; Enables a faster shutdown mechanism for OPcache.
 opcache.fast_shutdown=1
 ```
 
 Exit nano.
 
 ```
-sudo service phpXXX-fpm restart
-```
-
-# PHP-FPM Pool (/etc/php/XXX/fpm/pool.d/www.conf)
 
 ```
-; Use the dynamic process manager, which is flexible for varying traffic.
+
+# PHP-FPM Pool (/etc/php/8.1/fpm/pool.d/www.conf)
+
+```
+# Use the dynamic process manager, which is flexible for varying traffic.
 pm = dynamic
 
-; This is the most important setting.
-; Calculation: (4096MB total for PHP) / (avg 60MB per process) = ~68
-; We'll start with 60 as a safe number.
-pm.max_children = 60
+# This is the most important setting.
+# Calculation: (RAM / 2) / 60 = MAX (prob safe lower)
+# We'll start with 60 as a safe number.
+pm.max_children = 30
 
-; Start with a healthy number of processes ready to go.
-; (2 vCPUs * 4) = 8, but we can be more aggressive. Let's use 15.
-pm.start_servers = 15
+# Start with a healthy number of processes ready to go.
+# (2 vCPUs * 4) = 8, but we can be more aggressive. Let's use 15.
+pm.start_servers = 10
 
-; Keep at least this many processes waiting for requests.
-; (2 vCPUs * 2) = 4, but let's use 10.
-pm.min_spare_servers = 10
+# Keep at least this many processes waiting for requests.
+# (2 vCPUs * 2) = 4, but let's use 10.
+pm.min_spare_servers = 5
 
-; Don't let the number of idle processes grow too large.
-pm.max_spare_servers = 20
+# Don't let the number of idle processes grow too large.
+pm.max_spare_servers = 15
 
-; If a process handles this many requests, it will be automatically restarted.
-; This helps prevent memory leaks from long-running plugins.
+# If a process handles this many requests, it will be automatically restarted.
+# This helps prevent memory leaks from long-running plugins.
 pm.max_requests = 500
 ```
 
-# Custom MySQL settings
+# Custom MySQL settings (/etc/mysql/mysql.conf.d/z-custom-tuning.cnf)
 
 ```
-# Custom performance tuning for 8GB RAM server
-
 [mysqld]
-# Set the InnoDB buffer pool to 3GB. This is the most important setting.
-innodb_buffer_pool_size = 3G
+# Cache for InnoDB data and indexes to reduce disk I/O.
+innodb_buffer_pool_size = 1G
 
 # A modest buffer for MyISAM tables.
+# Cache for MyISAM table indexes.
 key_buffer_size = 128M
 
 # Increase the maximum allowed connections.
+# Maximum number of simultaneous database connections.
 max_connections = 200
 ```
 
-`sudo systemctl restart mysql`
+``
 
 # Setup redis for site
 
@@ -254,6 +260,7 @@ sudo apt install redis-server
 `sudo nano /etc/redis/redis.conf`
 
 ```
+# Integrates Redis with the systemd service manager for better process supervision.
 supervised systemd
 ```
 
@@ -280,13 +287,13 @@ BIGFKNSTRING
 ```
 # /etc/redis/redis.conf
 
-# Set a maximum memory limit of 512MB. This is plenty for object caching.
-maxmemory 512MB
+# Sets a hard memory limit to prevent Redis from using all available RAM.
+maxmemory 256MB
 
-# When the limit is reached, remove the least recently used (LRU) keys.
-# This is the ideal policy for a cache.
+# When memory is full, evicts the least recently used keys to make space.
 maxmemory-policy allkeys-lru
 
+# Secures the Redis server by requiring a password for all connections.
 requirepass BIGFKNSTRING
 ```
 
@@ -296,7 +303,7 @@ requirepass BIGFKNSTRING
 
 ```
 redis-cli -a BIGFKNSTRING
-config set maxmemory 512M
+config set maxmemory 256MB
 ```
 
 `sudo systemctl restart redis-server`
@@ -354,6 +361,7 @@ sudo find /var/www/html/ -type f -exec chmod 664 {} \; # Recursively change file
 ```
 sudo systemctl stop nginx
 sudo systemctl disable nginx
+sudo systemctl start nginx
 sudo systemctl status nginx
 ```
 
@@ -365,10 +373,10 @@ sudo systemctl status apache2
 ```
 
 ```
-sudo a2dismod phpXXX
+sudo a2dismod php8.1
 sudo a2dismod mpm_prefork
 sudo a2enmod mpm_event proxy_fcgi setenvif
-sudo a2enconf phpXXX-fpm
+sudo a2enconf php8.1-fpm
 ```
 
 ## References
