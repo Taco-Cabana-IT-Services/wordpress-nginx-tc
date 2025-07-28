@@ -31,7 +31,7 @@ sudo ufw status verbose
 
 ```
 sudo apt-mark hold mysql*
-sudo apt-mark hold php7.4*
+sudo apt-mark hold phpXXX*
 ```
 
 ```
@@ -45,7 +45,7 @@ nginx -v
 
 ```
 sudo apt-mark unhold mysql*
-sudo apt-mark unhold php7.4*
+sudo apt-mark unhold phpXXX*
 ```
 
 ```
@@ -57,24 +57,23 @@ sudo service nginx status
 sudo service nginx stop
 ```
 
-# Install php7.4-fpm
+# Install phpXXX-fpm
 
 ```
-sudo apt install php7.4-fpm php7.4-common php7.4-mysql \
-php7.4-xml php7.4-xmlrpc php7.4-curl php7.4-gd \
-php7.4-imagick php7.4-cli php7.4-dev php7.4-imap \
-php7.4-mbstring php7.4-opcache php7.4-redis \
-php7.4-soap php7.4-zip -y
-php-fpm7.4 -v
+sudo apt install phpXXX-fpm phpXXX-common phpXXX-mysql \
+phpXXX-xml phpXXX-xmlrpc phpXXX-curl phpXXX-gd \
+phpXXX-imagick phpXXX-cli phpXXX-dev phpXXX-imap \
+phpXXX-mbstring phpXXX-opcache phpXXX-redis \
+phpXXX-soap phpXXX-zip -y
+php-fpmXXX -v
 ```
 
 # Edit php.ini
 
-`sudo nano /etc/php/7.4/fpm/php.ini`
+`sudo nano /etc/php/XXX/fpm/php.ini`
 
 ```
-memory_limit = 512M
-upload_max_filesize = 64M
+memory_limit = 256M
 post_max_size = 64M
 max_input_time = 120
 max_execution_time = 120
@@ -127,37 +126,102 @@ sudo systemctl stop apache2
 ```
 
 ```
-sudo service php7.4-fpm restart
+sudo service phpXXX-fpm restart
 sudo service nginx start
 sudo nginx -t
 sudo service nginx restart
 sudo service nginx status
 ```
 
-### TODOs
-
-- Check if website is up
-- NGINX Cache by Till Krüss, then configure settings
-
 # Setup opcache for php
 
-`sudo nano /etc/php/7.4/fpm/php.ini`
+`sudo nano /etc/php/XXX/fpm/php.ini` and/or `/etc/php/XXX/fpm/conf.d/10-opcache.ini`
 
 ```
+; configuration for php opcache module
+; priority=10
+zend_extension=opcache.so
+
+; Enables the OPcache extension
 opcache.enable=1
-opcache.enable_cli=1
+
+; The size of the shared memory storage used by OPcache, in megabytes.
 opcache.memory_consumption=128
+
+; The amount of memory for interned strings in Mbytes.
 opcache.interned_strings_buffer=8
+
+; The maximum number of keys (and therefore scripts) in the OPcache hash table.
 opcache.max_accelerated_files=10000
+
+; How often (in seconds) to check script timestamps for updates.
 opcache.revalidate_freq=60
+
+; If enabled, OPcache will check for updated scripts.
+opcache.validate_timestamps=1
+
+; This MUST be enabled for WordPress.
+opcache.save_comments=1
+
+; The amount of shared memory to reserve for the JIT compiler.
+opcache.jit_buffer_size=100M
+
+; Enables Tracing JIT. This is the key setting.
+opcache.jit=1255
+
 opcache.fast_shutdown=1
 ```
 
 Exit nano.
 
 ```
-sudo service php7.4-fpm restart
+sudo service phpXXX-fpm restart
 ```
+
+# PHP-FPM Pool (/etc/php/XXX/fpm/pool.d/www.conf)
+
+```
+; Use the dynamic process manager, which is flexible for varying traffic.
+pm = dynamic
+
+; This is the most important setting.
+; Calculation: (4096MB total for PHP) / (avg 60MB per process) = ~68
+; We'll start with 60 as a safe number.
+pm.max_children = 60
+
+; Start with a healthy number of processes ready to go.
+; (2 vCPUs * 4) = 8, but we can be more aggressive. Let's use 15.
+pm.start_servers = 15
+
+; Keep at least this many processes waiting for requests.
+; (2 vCPUs * 2) = 4, but let's use 10.
+pm.min_spare_servers = 10
+
+; Don't let the number of idle processes grow too large.
+pm.max_spare_servers = 20
+
+; If a process handles this many requests, it will be automatically restarted.
+; This helps prevent memory leaks from long-running plugins.
+pm.max_requests = 500
+```
+
+# Custom MySQL settings
+
+```
+# Custom performance tuning for 8GB RAM server
+
+[mysqld]
+# Set the InnoDB buffer pool to 3GB. This is the most important setting.
+innodb_buffer_pool_size = 3G
+
+# A modest buffer for MyISAM tables.
+key_buffer_size = 128M
+
+# Increase the maximum allowed connections.
+max_connections = 200
+```
+
+`sudo systemctl restart mysql`
 
 # Setup redis for site
 
@@ -188,23 +252,32 @@ exit
 `openssl rand 60 | openssl base64 -A`
 
 ```
-DzsBOHA6HrDE9X7TkDW0TG8VJBJcnlhiuctdlNPLy4XsqTZ3wuj4ZcJRhVUwZuiR6GpRfW3SVGauLFVk
+BIGFKNSTRING
 ```
 
-`sudo nano /etc/redis/redis.conf`
+```
+# /etc/redis/redis.conf
+
+# Set a maximum memory limit of 512MB. This is plenty for object caching.
+maxmemory 512MB
+
+# When the limit is reached, remove the least recently used (LRU) keys.
+# This is the ideal policy for a cache.
+maxmemory-policy allkeys-lru
+
+requirepass BIGFKNSTRING
+```
 
 - Uncomment `requirepass` and paste value to right of key
 - Exit nano.
+- Just in case; do the same via the redis-cli...
 
 ```
-redis-cli -a DzsBOHA6HrDE9X7TkDW0TG8VJBJcnlhiuctdlNPLy4XsqTZ3wuj4ZcJRhVUwZuiR6GpRfW3SVGauLFVk
-config get maxmemory
-config set maxmemory 128M
+redis-cli -a BIGFKNSTRING
+config set maxmemory 512M
 ```
 
-### TODOs
-
-- Redis Object Cache by Till Krüss, then configure settings
+`sudo systemctl restart redis-server`
 
 # Setup fail2ban
 
@@ -270,10 +343,10 @@ sudo systemctl status apache2
 ```
 
 ```
-sudo a2dismod php7.4
+sudo a2dismod phpXXX
 sudo a2dismod mpm_prefork
 sudo a2enmod mpm_event proxy_fcgi setenvif
-sudo a2enconf php7.4-fpm
+sudo a2enconf phpXXX-fpm
 ```
 
 ## References
