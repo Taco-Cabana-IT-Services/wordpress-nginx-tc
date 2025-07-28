@@ -152,52 +152,47 @@ sudo service nginx status
 
 # Setup opcache for php
 
-`sudo nano /etc/php/8.1/fpm/php.ini` and/or `/etc/php/8.1/fpm/conf.d/10-opcache.ini`
+`sudo nano /etc/php/8.1/fpm/php.ini` and/or `sudo nano /etc/php/8.1/fpm/conf.d/10-opcache.ini`
 
 ```
 ; configuration for php opcache module
 ; priority=10
+; Enables the OPcache extension
 zend_extension=opcache.so
 
-; Enables the OPcache extension
 opcache.enable=1
 
-; The size of the shared memory storage used by OPcache, in megabytes.
 opcache.memory_consumption=256
-
-; The amount of memory for interned strings in Mbytes.
 opcache.interned_strings_buffer=32
-
-; The maximum number of keys (and therefore scripts) in the OPcache hash table.
 opcache.max_accelerated_files=16001
 
-; Disables OPcache for the CLI, as it's not needed for short-lived scripts.
-opcache.enable_cli=0
-; When enabled, OPcache appends the current working directory to the script key.
-opcache.use_cwd=1
-; Allows OPcache to skip the file existence check for includes/requires.
-opcache.enable_file_override=1
-
-; Validates file permissions before caching or serving from cache.
-opcache.validate_permission=1
-; Checks for conflicting filenames in the include_path.
-opcache.revalidate_path=1
 ; How often (in seconds) to check script timestamps for updates.
 opcache.revalidate_freq=5
+
 ; If enabled, OPcache will check for updated scripts.
 opcache.validate_timestamps=1
 
 ; This MUST be enabled for WordPress.
 opcache.save_comments=1
 
-; Crashes wp-admin for some reason? Might be fixed in php8.3 > or later WP versions.
-; The amount of shared memory to reserve for the JIT compiler.
-;opcache.jit_buffer_size=100M
-; Enables Tracing JIT. This is the key setting.
-;opcache.jit=1255
-
 ; Enables a faster shutdown mechanism for OPcache.
 opcache.fast_shutdown=1
+
+; Disables OPcache for the CLI, as it's not needed for short-lived scripts.
+opcache.enable_cli=0
+
+; Allows OPcache to skip the file existence check for includes/requires.
+opcache.enable_file_override=0
+
+; Validates file permissions before caching or serving from cache.
+opcache.validate_permission=1
+
+; Checks for conflicting filenames in the include_path.
+opcache.revalidate_path=0
+
+; JIT remains disabled as it was causing issues
+opcache.jit_buffer_size=100M
+opcache.jit=1255
 ```
 
 Exit nano.
@@ -233,6 +228,8 @@ pm.max_spare_servers = 20
 pm.max_requests = 500
 ```
 
+`sudo service php8.1-fpm restart`
+
 # Custom MySQL settings (sudo nano /etc/mysql/mysql.conf.d/z-custom-tuning.cnf)
 
 ```
@@ -243,7 +240,7 @@ innodb_buffer_pool_size = 3.5G
 
 # A modest buffer for MyISAM tables. WordPress core uses InnoDB.
 # Cache for MyISAM table indexes.
-key_buffer_size = 32M
+key_buffer_size = 64M
 
 # Increase the maximum allowed connections.
 # Should be slightly more than pm.max_children.
