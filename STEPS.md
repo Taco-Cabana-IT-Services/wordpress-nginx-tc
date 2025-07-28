@@ -163,10 +163,10 @@ zend_extension=opcache.so
 opcache.enable=1
 
 ; The size of the shared memory storage used by OPcache, in megabytes.
-opcache.memory_consumption=128
+opcache.memory_consumption=256
 
 ; The amount of memory for interned strings in Mbytes.
-opcache.interned_strings_buffer=16
+opcache.interned_strings_buffer=32
 
 ; The maximum number of keys (and therefore scripts) in the OPcache hash table.
 opcache.max_accelerated_files=16001
@@ -183,7 +183,7 @@ opcache.validate_permission=1
 ; Checks for conflicting filenames in the include_path.
 opcache.revalidate_path=1
 ; How often (in seconds) to check script timestamps for updates.
-opcache.revalidate_freq=30
+opcache.revalidate_freq=5
 ; If enabled, OPcache will check for updated scripts.
 opcache.validate_timestamps=1
 
@@ -206,47 +206,50 @@ Exit nano.
 
 ```
 
-# PHP-FPM Pool (/etc/php/8.1/fpm/pool.d/www.conf)
+# PHP-FPM Pool (sudo nano /etc/php/8.1/fpm/pool.d/www.conf)
 
 ```
 # Use the dynamic process manager, which is flexible for varying traffic.
 pm = dynamic
 
 # This is the most important setting.
-# Calculation: (RAM / 2) / 60 = MAX (prob safe lower)
-# We'll start with 60 as a safe number.
-pm.max_children = 30
+# Calculation: (Total RAM - MySQL RAM - Redis RAM - OS RAM) / Avg Process Size
+# (8192MB - 2048MB - 256MB - 1024MB) / 60MB = ~79
+pm.max_children = 64
 
 # Start with a healthy number of processes ready to go.
-# (2 vCPUs * 4) = 8, but we can be more aggressive. Let's use 15.
-pm.start_servers = 10
+# (2 vCPUs * 4)
+pm.start_servers = 8
 
 # Keep at least this many processes waiting for requests.
-# (2 vCPUs * 2) = 4, but let's use 10.
-pm.min_spare_servers = 5
+# (2 vCPUs * 2)
+pm.min_spare_servers = 4
 
 # Don't let the number of idle processes grow too large.
-pm.max_spare_servers = 15
+pm.max_spare_servers = 20
 
 # If a process handles this many requests, it will be automatically restarted.
 # This helps prevent memory leaks from long-running plugins.
 pm.max_requests = 500
 ```
 
-# Custom MySQL settings (/etc/mysql/mysql.conf.d/z-custom-tuning.cnf)
+# Custom MySQL settings (sudo nano /etc/mysql/mysql.conf.d/z-custom-tuning.cnf)
 
 ```
 [mysqld]
 # Cache for InnoDB data and indexes to reduce disk I/O.
-innodb_buffer_pool_size = 1G
+# Recommended: 25-30% of total system RAM.
+innodb_buffer_pool_size = 3.5G
 
-# A modest buffer for MyISAM tables.
+# A modest buffer for MyISAM tables. WordPress core uses InnoDB.
 # Cache for MyISAM table indexes.
-key_buffer_size = 128M
+key_buffer_size = 32M
 
 # Increase the maximum allowed connections.
-# Maximum number of simultaneous database connections.
+# Should be slightly more than pm.max_children.
 max_connections = 200
+
+query_cache_size = 128M
 ```
 
 ``
