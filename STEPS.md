@@ -94,8 +94,25 @@ sudo update-alternatives --config php
 ```
 cd ~/
 curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-php wp-cli.phar --info
 ```
+
+Step 2: Verify the Phar File This is an important security step to ensure the file you downloaded is not corrupted or malicious.
+
+`php wp-cli.phar --info`
+
+You should see output that includes the PHP version, WP-CLI version, and other details. If you see an error, delete the file and try downloading it again.
+
+Step 3: Make the File Executable This command gives the file permission to be run as a program.
+
+`chmod +x wp-cli.phar`
+
+Step 4: Move the File into Your PATH This command moves the file to /usr/local/bin and renames it to wp. This allows you to simply type wp to execute it, instead of php wp-cli.phar.
+
+`sudo mv wp-cli.phar /usr/local/bin/wp`
+
+Step 5: Test the Installation To confirm it's working correctly, run the following command:
+
+`wp --info`
 
 `sudo -s`
 
@@ -146,28 +163,33 @@ zend_extension=opcache.so
 opcache.enable=1
 
 ; The size of the shared memory storage used by OPcache, in megabytes.
-opcache.memory_consumption=128
+opcache.memory_consumption=256
 
 ; The amount of memory for interned strings in Mbytes.
-opcache.interned_strings_buffer=8
+opcache.interned_strings_buffer=32
 
 ; The maximum number of keys (and therefore scripts) in the OPcache hash table.
-opcache.max_accelerated_files=10000
+opcache.max_accelerated_files=32531
 
+opcache.enable_cli=0
+opcache.use_cwd=1
+opcache.enable_file_override=1
+
+opcache.validate_permission=1
+opcache.revalidate_path=1
 ; How often (in seconds) to check script timestamps for updates.
-opcache.revalidate_freq=60
-
+opcache.revalidate_freq=30
 ; If enabled, OPcache will check for updated scripts.
 opcache.validate_timestamps=1
 
 ; This MUST be enabled for WordPress.
 opcache.save_comments=1
 
+; Crashes wp-admin for some reason? Might be fixed in php8.3 > or later WP versions.
 ; The amount of shared memory to reserve for the JIT compiler.
-opcache.jit_buffer_size=100M
-
+;opcache.jit_buffer_size=100M
 ; Enables Tracing JIT. This is the key setting.
-opcache.jit=1255
+;opcache.jit=1255
 
 opcache.fast_shutdown=1
 ```
