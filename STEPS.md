@@ -235,8 +235,7 @@ pm.max_requests = 500
 ```
 [mysqld]
 # Cache for InnoDB data and indexes to reduce disk I/O.
-# Recommended: 25-30% of total system RAM.
-innodb_buffer_pool_size = 3.5G
+innodb_buffer_pool_size = 4G
 
 # A modest buffer for MyISAM tables. WordPress core uses InnoDB.
 # Cache for MyISAM table indexes.
@@ -245,8 +244,6 @@ key_buffer_size = 64M
 # Increase the maximum allowed connections.
 # Should be slightly more than pm.max_children.
 max_connections = 200
-
-query_cache_size = 128M
 ```
 
 ``
