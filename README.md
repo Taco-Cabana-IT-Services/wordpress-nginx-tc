@@ -1,90 +1,25 @@
-## Usage
+# Taco Cabana WordPress / NGINX
 
-### Site configuration
+Start with **[STEPS.md](STEPS.md)**. It is the current guide for rebuilding staging and production EC2 instances on Ubuntu 26.04 LTS with PHP 8.5, current WordPress, NGINX, MySQL and Redis. It covers owner-only setup access, HTTPS, migration, testing and traffic cutover.
 
-You can use these sample configurations as reference or directly by replacing your existing nginx directory. Follow the steps below to replace your existing Nginx configuration.
+The guide was consolidated from both supplied 2021 installation guides, the previous server setup notes, current NGINX configuration and the [application README](/home/jpdemko/tacocabana.com/README.md).
 
-Backup any existing config:
+## Files to use for the replacement servers
 
-`sudo mv /etc/nginx /etc/nginx.backup`
+| File | Purpose |
+| --- | --- |
+| [STEPS.md](STEPS.md) | The single operator guide; staging first, then production |
+| [setup/wordpress.nginx.conf](setup/wordpress.nginx.conf) | WordPress/PHP 8.5 site template; optional conservative HTML caching |
+| [setup/production-proxies.nginx.conf](setup/production-proxies.nginx.conf) | Production ordering and SendGrid proxy configuration |
+| [setup/route53-certbot-policy.json](setup/route53-certbot-policy.json) | Scoped DNS-challenge policy template for the replacement EC2 role |
+| [setup/tc-build-guard.php](setup/tc-build-guard.php) | Suppress WordPress email/indexing while testing a non-production clone |
 
-Copy these configs to `/etc/nginx`.
+`UPGRADE-PLAN.md` and `MIGRATION-PLAN.md` redirect to the consolidated guide.
 
-Symlink the default file from _sites-available_ to _sites-enabled_, which will setup a catch-all server block. This will ensure unrecognised domains return a 444 response.
+## Existing configuration reference
 
-`sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default`
+The root `nginx.conf`, `global/`, `sites-available/` and `modules-enabled/` describe the existing servers. Their PHP upstream is **8.1** in `global/php-pool.conf`; individual sites use `$upstream`. They contain older module, TLS, caching and filesystem assumptions.
 
-Copy one of the example configurations from _sites-available_ to _sites-available/yourdomain.com_:
+Keep the new Ubuntu package's NGINX defaults and use the new templates. Review needed custom routes/settings individually rather than replacing the entire `/etc/nginx` directory with this checkout. Dynamic module binaries must match the installed NGINX build.
 
-`sudo cp /etc/nginx/sites-available/single-site.com /etc/nginx/sites-available/yourdomain.com`
-
-Edit the site accordingly, paying close attention to the server name and paths.
-
-To enable the site, symlink the configuration into the _sites-enabled_ directory:
-
-`sudo ln -s /etc/nginx/sites-available/yourdomain.com /etc/nginx/sites-enabled/yourdomain.com`
-
-Test the configuration:
-
-`sudo nginx -t`
-
-If the configuration passes, restart Nginx:
-
-`sudo service nginx reload`
-
-### PHP configuration
-
-The php-fpm pool configuration is located in `global/php-pool.conf` and defaults to PHP 7.4. It will need modifying if you want the default php-fpm pool service to be a different PHP version. Additional PHP version upstream definitions can be added to the `/upstreams` folder (a PHP 8.3 sample is provided there). You can either use the default pool using `$upstream` in your nginx configurations or the specific upstream definition (i.e. php83, php82) setup by your custom upstream definitions.
-
-For example, currently the nginx configuration for `single-site.com` has the following set for php requests:
-
-```
-fastcgi_pass    $upstream
-```
-
-You could change that to the following to use the php 8.3 PHP service instead (assuming that php8.3-fpm service is running).
-
-```
-fastcgi_pass    php83
-```
-
-This effectively allows you to have different server blocks execute different versions of PHP if needed.
-
-## Directory Structure
-
-This config kit has the following structure, which is based on the conventions used by a default Nginx install on Debian:
-
-```
-.
-├── conf.d
-├── global
-    └── server
-├── sites-available
-├── sites-enabled
-```
-
-**conf.d** - configurations for additional modules.
-
-**global** - configurations within the `http` block.
-
-**global/server** - configurations within the `server` block. The `defaults.conf` file should be included on the majority of sites, which contains sensible defaults for caching, file exclusions and security. Additional `.conf` files can be included as needed on a per-site basis.
-
-**sites-available** - configurations for individual sites (virtual hosts).
-
-**sites-enabled** - symlinks to configurations within the `sites-available` directory. Only sites which have been symlinked are loaded.
-
-### Recommended Site Structure
-
-The following site structure is used throughout these configs:
-
-```
-.
-├── yourdomain1.com
-    └── cache
-    └── logs
-    └── public
-├── yourdomain2.com
-    └── cache
-    └── logs
-    └── public
-```
+The separate [SSL automation plan](ssl-automation-plan/README.md) remains a reference for the broader certificate project. The rebuild guide supplies its own Let's Encrypt/Route 53 path that works while inbound access is restricted.
