@@ -1,0 +1,15 @@
+# Taco Cabana MySQL 8.4 settings. Loaded after Ubuntu's mysqld.cnf.
+# Install: sudo install -m 0644 /etc/nginx/setup/mysql/tacocabana.cnf /etc/mysql/mysql.conf.d/tacocabana.cnf
+
+[mysqld]
+# Only this server's PHP talks to MySQL.
+bind-address = 127.0.0.1
+mysqlx-bind-address = 127.0.0.1
+
+# Cache for InnoDB data and indexes to reduce disk I/O.
+# PRODUCTION (4 GB): 1G. STAGING (2 GB): change to 512M.
+# (The old 4G value was sized for the 8 GB t3.large test and would run a 4 GB box out of memory.)
+innodb_buffer_pool_size = 1G
+
+# Single server with no replicas: binary logs would only use disk space.
+skip-log-bin

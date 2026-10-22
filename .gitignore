@@ -1,2 +1,33 @@
-certs/
-/certs
+# This repo is checked out directly into /etc/nginx on top of Ubuntu's nginx package.
+# Files the package (apt) owns stay untracked so upgrades can update them.
+/conf.d/*
+/modules-available/
+/modules-enabled/
+/snippets/
+/sites-available/default
+/sites-enabled/*
+/fastcgi.conf
+/fastcgi_params
+/koi-utf
+/koi-win
+/win-utf
+/mime.types
+/proxy_params
+/scgi_params
+/uwsgi_params
+*.dpkg-dist
+*.dpkg-new
+*.dpkg-old
+*.ucf-*
+
+# Keep the placeholder files that keep these folders in git.
+!/conf.d/.gitignore
+!/sites-enabled/.gitignore
+
+# Certificates and private keys never go in git.
+/certs/
+*.key
+*.pem
+*.pfx
+
+.DS_Store

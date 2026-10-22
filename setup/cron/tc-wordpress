@@ -1,0 +1,6 @@
+# WordPress scheduled tasks (WP-Cron, Action Scheduler, UpdraftPlus backups, ...).
+# wp-config.php sets DISABLE_WP_CRON, so this is the only thing that runs them.
+# Install ONLY on the live server for each environment, at go-live:
+#   sudo install -m 0644 /etc/nginx/setup/cron/tc-wordpress /etc/cron.d/tc-wordpress
+# Results: sudo journalctl -t tc-wp-cron
+*/5 * * * * www-data /usr/bin/flock -n /tmp/tc-wp-cron.lock /usr/local/bin/wp --path=/var/www/html/wordpress cron event run --due-now --quiet 2>&1 | /usr/bin/logger -t tc-wp-cron

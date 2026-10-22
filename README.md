@@ -1,25 +1,33 @@
 # Taco Cabana WordPress / NGINX
 
-Start with **[STEPS.md](STEPS.md)**. It is the current guide for rebuilding staging and production EC2 instances on Ubuntu 26.04 LTS with PHP 8.5, current WordPress, NGINX, MySQL and Redis. It covers owner-only setup access, HTTPS, migration, testing and traffic cutover.
+nginx configuration for the production (`www.tacocabana.com`) and staging (`www-staging.tacocabana.com`) WordPress servers: Ubuntu 26.04, nginx 1.28, PHP 8.5-FPM, MySQL 8.4, Redis.
 
-The guide was consolidated from both supplied 2021 installation guides, the previous server setup notes, current NGINX configuration and the [application README](/home/jpdemko/tacocabana.com/README.md).
+**This repo is checked out directly into `/etc/nginx` on each server.** Files Ubuntu's nginx package owns (`mime.types`, `fastcgi.conf`, `snippets/`, `modules-enabled/`, ...) stay untracked so `apt` can keep updating them; see [.gitignore](.gitignore).
 
-## Files to use for the replacement servers
+To build a new server or move to a new one, follow **[STEPS.md](STEPS.md)**.
+
+## Files
 
 | File | Purpose |
 | --- | --- |
-| [STEPS.md](STEPS.md) | The single operator guide; staging first, then production |
-| [setup/wordpress.nginx.conf](setup/wordpress.nginx.conf) | WordPress/PHP 8.5 site template; optional conservative HTML caching |
-| [setup/production-proxies.nginx.conf](setup/production-proxies.nginx.conf) | Production ordering and SendGrid proxy configuration |
-| [setup/route53-certbot-policy.json](setup/route53-certbot-policy.json) | Scoped DNS-challenge policy template for the replacement EC2 role |
-| [setup/tc-build-guard.php](setup/tc-build-guard.php) | Suppress WordPress email/indexing while testing a non-production clone |
+| [nginx.conf](nginx.conf) | Main config: FastCGI buffers, page cache zone, includes |
+| [global/](global/) | Shared http settings (gzip, limits, PHP 8.5 upstream) |
+| [global/server/](global/server/) | Per-site includes: certificate/TLS, page cache rules, security headers, static file caching, blocked paths |
+| [sites-available/tacocabana.com.conf](sites-available/tacocabana.com.conf) | Production: www, apex redirect, SendGrid link-branding proxy (`marketing.`, `email.`) |
+| [sites-available/www-staging.tacocabana.com.conf](sites-available/www-staging.tacocabana.com.conf) | Staging (noindex) |
+| [sites-available/catch-all.conf](sites-available/catch-all.conf) | Default server that drops requests for unknown hostnames and the bare IP |
+| [setup/](setup/) | PHP, PHP-FPM pool, MySQL and cron settings that STEPS.md copies into place, plus the temporary clone-guard mu-plugin |
 
-`UPGRADE-PLAN.md` and `MIGRATION-PLAN.md` redirect to the consolidated guide.
+Enable a site with `sudo ln -s ../sites-available/NAME.conf /etc/nginx/sites-enabled/`. Each server enables `catch-all.conf` plus its own site file.
 
-## Existing configuration reference
+## Making changes
 
-The root `nginx.conf`, `global/`, `sites-available/` and `modules-enabled/` describe the existing servers. Their PHP upstream is **8.1** in `global/php-pool.conf`; individual sites use `$upstream`. They contain older module, TLS, caching and filesystem assumptions.
+Edit and commit here, push, then on the server:
 
-Keep the new Ubuntu package's NGINX defaults and use the new templates. Review needed custom routes/settings individually rather than replacing the entire `/etc/nginx` directory with this checkout. Dynamic module binaries must match the installed NGINX build.
+```bash
+cd /etc/nginx && sudo git pull && sudo nginx -t && sudo systemctl reload nginx
+```
 
-The separate [SSL automation plan](ssl-automation-plan/README.md) remains a reference for the broader certificate project. The rebuild guide supplies its own Let's Encrypt/Route 53 path that works while inbound access is restricted.
+The old Ubuntu 20.04 / PHP 8.1 configuration is tagged `ubuntu-20.04`. Don't `git pull` this repo on the old servers.
+
+The [SSL automation plan](ssl-automation-plan/README.md) is a separate, later project. Until then, both servers use the GoDaddy wildcard certificate set in [global/server/ssl.conf](global/server/ssl.conf).
